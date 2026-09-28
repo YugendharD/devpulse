@@ -27,6 +27,12 @@ function App() {
           fetch(`https://api.github.com/users/${username}/repos?per_page=100`),
         ]);
 
+        if (profileRes.status === 403) {
+          throw new Error(
+            "GitHub API rate limit reached. Please try again in a few minutes."
+          );
+        }
+
         if (!profileRes.ok) {
           throw new Error("User not found");
         }
@@ -59,7 +65,18 @@ function App() {
 
       <SearchBar onSearch={handleSearch} />
 
-      {loading && <p className="status-message">Loading...</p>}
+      {loading && (
+        <div className="skeleton-card">
+          <div className="skeleton-avatar"></div>
+          <div className="skeleton-line skeleton-title"></div>
+          <div className="skeleton-line skeleton-subtitle"></div>
+          <div className="skeleton-stats">
+            <div className="skeleton-line skeleton-stat"></div>
+            <div className="skeleton-line skeleton-stat"></div>
+            <div className="skeleton-line skeleton-stat"></div>
+          </div>
+        </div>
+      )}
       {error && <p className="status-message error">{error}</p>}
 
       {profile && (
