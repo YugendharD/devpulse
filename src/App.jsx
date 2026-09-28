@@ -65,6 +65,19 @@ function App() {
 
       <SearchBar onSearch={handleSearch} />
 
+      {!username && (
+        <div className="empty-state">
+          <p>Not sure where to start? Try one of these developers:</p>
+          <div className="example-chips">
+            {["torvalds", "gaearon", "yyx990803"].map((name) => (
+              <button key={name} onClick={() => handleSearch(name)}>
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {loading && (
         <div className="skeleton-card">
           <div className="skeleton-avatar"></div>

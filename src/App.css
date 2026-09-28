@@ -162,7 +162,6 @@
 
 .repo-card {
   display: block;
-  text-decoration: none;
   padding: 1.2rem;
   background-color: #161b22;
   border: 1px solid #30363d;
@@ -299,4 +298,32 @@
   100% {
     transform: translateX(100%);
   }
+}
+
+.empty-state {
+  margin-top: 3rem;
+  color: #8b949e;
+}
+
+.example-chips {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.example-chips button {
+  padding: 0.5rem 1rem;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 999px;
+  color: #58a6ff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.example-chips button:hover {
+  border-color: #58a6ff;
 }
