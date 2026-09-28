@@ -162,6 +162,7 @@
 
 .repo-card {
   display: block;
+  text-decoration: none;
   padding: 1.2rem;
   background-color: #161b22;
   border: 1px solid #30363d;
