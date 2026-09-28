@@ -1,23 +1,66 @@
-import { useState, useEffect, useRef } from "react";
+
+import { useState, useEffect } from "react";
+
+import Constellation from "./components/Constellation";
 import SearchBar from "./components/SearchBar";
 import ProfileCard from "./components/ProfileCard";
 import RepoList from "./components/RepoList";
 import LanguageChart from "./components/LanguageChart";
 import Tilt from "./components/Tilt";
+
 import "./App.css";
 
-const FEATURES = [
+const REPO_URL = "https://github.com/YugendharD/devpulse";
+const PORTFOLIO_URL = "https://yugendhard.github.io/portfolio/";
+
+const FEATURED = [
   {
-    title: "Profile",
-    text: "Followers, following and public repo count at a glance.",
+    user: "torvalds",
+    name: "Linus Torvalds",
+    note: "Creator of Linux and Git",
   },
   {
-    title: "Languages",
-    text: "The language mix across all of their public repositories.",
+    user: "gaearon",
+    name: "Dan Abramov",
+    note: "Co-creator of Redux",
   },
   {
-    title: "Repositories",
-    text: "Their most-starred projects, linked straight to GitHub.",
+    user: "yyx990803",
+    name: "Evan You",
+    note: "Creator of Vue and Vite",
+  },
+  {
+    user: "sindresorhus",
+    name: "Sindre Sorhus",
+    note: "Prolific npm package author",
+  },
+  {
+    user: "tj",
+    name: "TJ Holowaychuk",
+    note: "Creator of Express",
+  },
+  {
+    user: "addyosmani",
+    name: "Addy Osmani",
+    note: "Chrome and web performance",
+  },
+];
+
+const STEPS = [
+  {
+    number: "01",
+    title: "Search",
+    text: "Type any public GitHub username, or pick a developer above.",
+  },
+  {
+    number: "02",
+    title: "Fetch live",
+    text: "The profile and repository list are requested from the GitHub API in parallel.",
+  },
+  {
+    number: "03",
+    title: "Explore",
+    text: "See followers, the language mix and the most-starred repositories in one dashboard.",
   },
 ];
 
@@ -27,24 +70,11 @@ function App() {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const appRef = useRef(null);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    function handleMove(event) {
-      const x = event.clientX / window.innerWidth - 0.5;
-      const y = event.clientY / window.innerHeight - 0.5;
-      appRef.current?.style.setProperty("--px", x.toFixed(3));
-      appRef.current?.style.setProperty("--py", y.toFixed(3));
-    }
-
-    window.addEventListener("mousemove", handleMove);
-    return () => window.removeEventListener("mousemove", handleMove);
-  }, []);
 
   useEffect(() => {
     if (!username) return;
+
+    let cancelled = false;
 
     async function fetchData() {
       setLoading(true);
@@ -53,103 +83,282 @@ function App() {
       setRepos([]);
 
       try {
+        const safeUsername = encodeURIComponent(username);
+
         const [profileRes, reposRes] = await Promise.all([
-          fetch(`https://api.github.com/users/${username}`),
-          fetch(`https://api.github.com/users/${username}/repos?per_page=100`),
+          fetch(
+            `https://api.github.com/users/${safeUsername}`
+          ),
+          fetch(
+            `https://api.github.com/users/${safeUsername}/repos?per_page=100`
+          ),
         ]);
 
-        if (profileRes.status === 403) {
+        if (
+          profileRes.status === 403 ||
+          reposRes.status === 403
+        ) {
           throw new Error(
             "GitHub API rate limit reached. Please try again in a few minutes."
           );
         }
 
+        if (profileRes.status === 404) {
+          throw new Error(
+            "User not found. Please check the GitHub username."
+          );
+        }
+
         if (!profileRes.ok) {
-          throw new Error("User not found");
+          throw new Error(
+            "Unable to fetch the GitHub profile."
+          );
+        }
+
+        if (!reposRes.ok) {
+          throw new Error(
+            "Unable to fetch GitHub repositories."
+          );
         }
 
         const profileData = await profileRes.json();
         const reposData = await reposRes.json();
 
+        if (cancelled) return;
+
         setProfile(profileData);
-        setRepos(reposData);
+        setRepos(
+          Array.isArray(reposData) ? reposData : []
+        );
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) {
+          setError(
+            err.message || "Something went wrong."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [username]);
 
   function handleSearch(searchedUsername) {
-    setUsername(searchedUsername);
+    const cleanUsername = searchedUsername.trim();
+
+    if (!cleanUsername) return;
+
+    setUsername(cleanUsername);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function handleHome() {
+    setUsername(null);
+    setProfile(null);
+    setRepos([]);
+    setError(null);
+    setLoading(false);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   return (
-    <div className="app" ref={appRef}>
-      <header className="app-header">
-        <div className="orb" aria-hidden="true">
-          <div className="orb-core"></div>
-          <div className="orb-ring orb-ring-1"></div>
-          <div className="orb-ring orb-ring-2"></div>
-          <div className="orb-ring orb-ring-3"></div>
-        </div>
+    <>
+      <Constellation />
 
-        <span className="badge">Live data from the GitHub API</span>
-        <h1>DevPulse</h1>
-        <p>Live GitHub analytics for any developer</p>
-      </header>
+      <div className="app">
+        <nav className="topbar">
+          <button
+            className="brand"
+            type="button"
+            onClick={handleHome}
+          >
+            <span className="brand-dot"></span>
+            DevPulse
+          </button>
 
-      <SearchBar onSearch={handleSearch} />
+          <div className="topbar-links">
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Source
+            </a>
 
-      {!username && (
-        <div className="empty-state">
-          <p className="chips-label">
-            Try a developer, or press <kbd>/</kbd> to search:
+            <a
+              href={PORTFOLIO_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Portfolio
+            </a>
+          </div>
+        </nav>
+
+        <main className="main">
+          <section
+            className={`hero ${username ? "compact" : ""}`}
+          >
+            <span className="badge">
+              Live data from the GitHub API
+            </span>
+
+            <h1>DevPulse</h1>
+
+            <p className="hero-sub">
+              Live GitHub analytics for any developer
+            </p>
+
+            <SearchBar onSearch={handleSearch} />
+
+            <p className="hint">
+              Press <kbd>/</kbd> to focus the search box
+            </p>
+
+            {error && (
+              <p className="status-message error">
+                {error}
+              </p>
+            )}
+          </section>
+
+          {!username && (
+            <>
+              <section className="section">
+                <div className="section-label">
+                  <span>01</span>
+                  <span>Explore a developer</span>
+                </div>
+
+                <div className="dev-grid">
+                  {FEATURED.map((dev) => (
+                    <Tilt
+                      as="button"
+                      type="button"
+                      className="dev-card"
+                      key={dev.user}
+                      max={6}
+                      onClick={() =>
+                        handleSearch(dev.user)
+                      }
+                    >
+                      <img
+                        className="dev-avatar"
+                        src={`https://github.com/${dev.user}.png?size=96`}
+                        alt={`${dev.name} GitHub avatar`}
+                        width="52"
+                        height="52"
+                        loading="lazy"
+                      />
+
+                      <div className="dev-text">
+                        <strong>{dev.name}</strong>
+                        <span>@{dev.user}</span>
+                        <em>{dev.note}</em>
+                      </div>
+                    </Tilt>
+                  ))}
+                </div>
+              </section>
+
+              <section className="section">
+                <div className="section-label">
+                  <span>02</span>
+                  <span>How it works</span>
+                </div>
+
+                <div className="steps">
+                  {STEPS.map((step) => (
+                    <Tilt
+                      className="step"
+                      key={step.number}
+                      max={5}
+                    >
+                      <span className="step-number">
+                        {step.number}
+                      </span>
+
+                      <h3>{step.title}</h3>
+                      <p>{step.text}</p>
+                    </Tilt>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
+
+          {loading && (
+            <div className="skeleton-card">
+              <div className="skeleton-avatar"></div>
+
+              <div className="skeleton-line skeleton-title"></div>
+
+              <div className="skeleton-line skeleton-subtitle"></div>
+
+              <div className="skeleton-stats">
+                <div className="skeleton-line skeleton-stat"></div>
+                <div className="skeleton-line skeleton-stat"></div>
+                <div className="skeleton-line skeleton-stat"></div>
+              </div>
+            </div>
+          )}
+
+          {profile && (
+            <div className="results">
+              <aside className="results-side">
+                <ProfileCard profile={profile} />
+                <LanguageChart repos={repos} />
+              </aside>
+
+              <section className="results-main">
+                <RepoList repos={repos} />
+              </section>
+            </div>
+          )}
+        </main>
+
+        <footer className="footer">
+          <p>
+            Built by Yugendhar Dommaraju · React + Vite ·
+            GitHub REST API
           </p>
-          <div className="example-chips">
-            {["torvalds", "gaearon", "yyx990803"].map((name) => (
-              <button key={name} onClick={() => handleSearch(name)}>
-                {name}
-              </button>
-            ))}
-          </div>
 
-          <div className="feature-grid">
-            {FEATURES.map((feature) => (
-              <Tilt className="feature-card" key={feature.title}>
-                <h3>{feature.title}</h3>
-                <p>{feature.text}</p>
-              </Tilt>
-            ))}
-          </div>
-        </div>
-      )}
+          <p>
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Source code
+            </a>
 
-      {loading && (
-        <div className="skeleton-card">
-          <div className="skeleton-avatar"></div>
-          <div className="skeleton-line skeleton-title"></div>
-          <div className="skeleton-line skeleton-subtitle"></div>
-          <div className="skeleton-stats">
-            <div className="skeleton-line skeleton-stat"></div>
-            <div className="skeleton-line skeleton-stat"></div>
-            <div className="skeleton-line skeleton-stat"></div>
-          </div>
-        </div>
-      )}
-      {error && <p className="status-message error">{error}</p>}
+            {" · "}
 
-      {profile && (
-        <>
-          <ProfileCard profile={profile} />
-          <LanguageChart repos={repos} />
-          <RepoList repos={repos} />
-        </>
-      )}
-    </div>
+            <a
+              href={PORTFOLIO_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Portfolio
+            </a>
+          </p>
+        </footer>
+      </div>
+    </>
   );
 }
 
