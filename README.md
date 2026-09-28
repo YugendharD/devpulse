@@ -1,5 +1,7 @@
 # DevPulse — Live GitHub Analytics Dashboard
 
+**Live:** [devpulse-zeta-five.vercel.app](https://devpulse-zeta-five.vercel.app)
+
 Enter any GitHub username and get a real-time dashboard of their public developer activity: profile stats, language breakdown, and top repositories, all pulled live from GitHub's REST API.
 
 ## What it does
