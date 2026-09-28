@@ -45,4 +45,57 @@ Only public, unauthenticated endpoints are used. No accounts, no tokens, no back
 
 - **Rate limit:** the unauthenticated API allows 60 requests per hour per IP. Each search uses 2 requests, so roughly 30 searches per hour.
 - **First 100 repositories only.** There is no pagination. For users with more than 100 public repositories, the language breakdown and top repositories are computed from the first 100 the API returns.
-- **Language share is by repository count**, using each repository's primary language. It is not measured in bytes or
+- **Language share is by repository count**, using each repository's primary language. It is not measured in bytes or lines of code.
+- **Forks are included** in the repository list and language counts.
+- **No caching.** Every search hits the API again.
+- **No automated tests.**
+- **Cursor effects need a mouse.** On touch devices the background animates, but tilt and cursor links do nothing.
+
+## Stack
+
+React (Vite) · JavaScript · plain CSS (Grid, Flexbox, custom properties) · Canvas 2D · GitHub REST API · Vercel
+
+## Structure
+
+```
+src/
+├── components/
+│   ├── Constellation.jsx   canvas background
+│   ├── SearchBar.jsx       input and "/" shortcut
+│   ├── ProfileCard.jsx     avatar, bio, stats
+│   ├── LanguageChart.jsx   language ranking
+│   ├── RepoList.jsx        top repositories
+│   └── Tilt.jsx            reusable tilt wrapper
+├── App.jsx                 state, data fetching, layout
+├── App.css
+├── index.css
+└── main.jsx
+```
+
+## Run locally
+
+Requires Node.js 22 (developed on 22.18).
+
+```bash
+git clone https://github.com/YugendharD/devpulse.git
+cd devpulse
+npm install
+npm run dev
+```
+
+Production build:
+
+```bash
+npm run build
+npm run preview
+```
+
+## Deployment
+
+Hosted on Vercel and connected to the `main` branch. Every push to `main` redeploys automatically.
+
+## Contact
+
+- Email: yugendhardommaraju06@gmail.com
+- LinkedIn: https://www.linkedin.com/in/yugendhar-dommaraju-15b051327/
+- Portfolio: https://yugendhard.github.io/portfolio/
