@@ -1,20 +1,174 @@
 .app {
+  --px: 0;
+  --py: 0;
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
   max-width: 700px;
   margin: 0 auto;
   padding: 4rem 1.5rem;
   text-align: center;
 }
 
+/* ---------- 3D tilt (used by cards) ---------- */
+
+.tilt {
+  --rx: 0deg;
+  --ry: 0deg;
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out, border-color 0.2s ease;
+  will-change: transform;
+}
+
+.tilt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--mx) var(--my),
+    rgba(255, 255, 255, 0.09),
+    transparent 45%
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tilt:hover::after {
+  opacity: 1;
+}
+
+.tilt .avatar {
+  transform: translateZ(40px);
+}
+
+.tilt .stats {
+  transform: translateZ(22px);
+}
+
+/* ---------- Header ---------- */
+
+.app-header {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.app-header::before {
+  content: "";
+  position: absolute;
+  top: -70px;
+  left: 50%;
+  width: 520px;
+  height: 320px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(88, 166, 255, 0.16), transparent 70%);
+  filter: blur(30px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.3rem 0.9rem;
+  margin-bottom: 1.2rem;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 999px;
+  color: #8b949e;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
 .app-header h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #ffffff 0%, #8b949e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .app-header p {
   color: #8b949e;
   margin-top: 0.5rem;
-  margin-bottom: 2rem;
 }
+
+/* ---------- 3D orb behind the title ---------- */
+
+.orb {
+  --orb-scale: 1;
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  z-index: -1;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  transform: translate(-50%, -50%) perspective(800px)
+    translate3d(calc(var(--px) * 26px), calc(var(--py) * 26px), 0)
+    rotateX(calc(var(--py) * -12deg)) rotateY(calc(var(--px) * 12deg))
+    scale(var(--orb-scale));
+  transition: transform 0.2s ease-out;
+}
+
+.orb-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.35),
+    rgba(88, 166, 255, 0.25) 40%,
+    rgba(88, 166, 255, 0.04) 72%
+  );
+  box-shadow: 0 0 60px rgba(88, 166, 255, 0.25);
+  animation: coreFloat 6s ease-in-out infinite;
+}
+
+.orb-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(88, 166, 255, 0.28);
+  transform-style: preserve-3d;
+}
+
+.orb-ring-1 {
+  width: 280px;
+  height: 280px;
+  transform: translate(-50%, -50%) rotateX(70deg) rotateZ(0deg);
+  animation: ringSpin1 14s linear infinite;
+}
+
+.orb-ring-2 {
+  width: 220px;
+  height: 220px;
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translate(-50%, -50%) rotateY(70deg) rotateZ(0deg);
+  animation: ringSpin2 18s linear infinite;
+}
+
+.orb-ring-3 {
+  width: 340px;
+  height: 340px;
+  border-color: rgba(88, 166, 255, 0.16);
+  transform: translate(-50%, -50%) rotateZ(35deg) rotateX(65deg);
+  animation: ringSpin3 22s linear infinite;
+}
+
+/* ---------- Search ---------- */
 
 .search-bar {
   display: flex;
@@ -30,11 +184,13 @@
   color: #e6edf3;
   font-size: 1rem;
   width: 260px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .search-bar input:focus {
   outline: none;
   border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.18);
 }
 
 .search-bar button {
@@ -45,7 +201,91 @@
   color: #0d1117;
   font-weight: 600;
   cursor: pointer;
+  transition: filter 0.2s ease;
 }
+
+.search-bar button:hover {
+  filter: brightness(1.1);
+}
+
+/* ---------- Empty state ---------- */
+
+.empty-state {
+  margin-top: 2.5rem;
+  animation: fadeUp 0.6s ease both;
+}
+
+.chips-label {
+  color: #8b949e;
+  font-size: 0.9rem;
+}
+
+.chips-label kbd {
+  padding: 0.1rem 0.45rem;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: #e6edf3;
+}
+
+.example-chips {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.example-chips button {
+  padding: 0.5rem 1rem;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 999px;
+  color: #58a6ff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.example-chips button:hover {
+  border-color: #58a6ff;
+  transform: translateY(-2px);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 3rem;
+  text-align: left;
+}
+
+.feature-card {
+  padding: 1.2rem;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+}
+
+.feature-card:hover {
+  border-color: #58a6ff;
+}
+
+.feature-card h3 {
+  color: #58a6ff;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+}
+
+.feature-card p {
+  color: #8b949e;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* ---------- Status ---------- */
 
 .status-message {
   margin-top: 2rem;
@@ -56,12 +296,15 @@
   color: #f85149;
 }
 
+/* ---------- Profile card ---------- */
+
 .profile-card {
   margin-top: 2.5rem;
   padding: 2rem;
   background-color: #161b22;
   border-radius: 12px;
   border: 1px solid #30363d;
+  animation: fadeIn 0.5s ease both;
 }
 
 .avatar {
@@ -107,10 +350,12 @@
   font-size: 0.8rem;
 }
 
+/* ---------- Language chart ---------- */
 
 .language-chart {
   margin-top: 2.5rem;
   text-align: left;
+  animation: fadeUp 0.5s ease both;
 }
 
 .language-chart h3 {
@@ -141,12 +386,15 @@
   height: 100%;
   background-color: #58a6ff;
   border-radius: 4px;
-  transition: width 0.4s ease;
+  animation: growBar 0.9s ease both;
 }
+
+/* ---------- Repo list ---------- */
 
 .repo-list {
   margin-top: 2.5rem;
   text-align: left;
+  animation: fadeUp 0.5s ease both;
 }
 
 .repo-list h3 {
@@ -162,12 +410,12 @@
 
 .repo-card {
   display: block;
+  text-decoration: none;
   padding: 1.2rem;
   background-color: #161b22;
   border: 1px solid #30363d;
   border-radius: 10px;
   color: inherit;
-  transition: border-color 0.2s ease;
 }
 
 .repo-card:hover {
@@ -193,34 +441,7 @@
   color: #8b949e;
 }
 
-@media (max-width: 600px) {
-
-  .app {
-    padding: 3rem 1rem;
-  }
-
-  .search-bar {
-    flex-direction: column;
-  }
-
-  .search-bar input {
-    width: 100%;
-  }
-
-  .search-bar button {
-    width: 100%;
-  }
-
-  .stats {
-    gap: 1.5rem;
-  }
-
-  .repo-grid {
-    grid-template-columns: 1fr;
-  }
-
-}
-
+/* ---------- Loading skeleton ---------- */
 
 .skeleton-card {
   margin-top: 2.5rem;
@@ -291,6 +512,8 @@
   animation: shimmer 1.5s infinite;
 }
 
+/* ---------- Animations ---------- */
+
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
@@ -300,30 +523,129 @@
   }
 }
 
-.empty-state {
-  margin-top: 3rem;
-  color: #8b949e;
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.example-chips {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1rem;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.example-chips button {
-  padding: 0.5rem 1rem;
-  background-color: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 999px;
-  color: #58a6ff;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
+@keyframes growBar {
+  from {
+    width: 0;
+  }
 }
 
-.example-chips button:hover {
-  border-color: #58a6ff;
+@keyframes coreFloat {
+  0%,
+  100% {
+    transform: translate(-50%, -50%);
+  }
+  50% {
+    transform: translate(-50%, calc(-50% - 10px));
+  }
+}
+
+@keyframes ringSpin1 {
+  from {
+    transform: translate(-50%, -50%) rotateX(70deg) rotateZ(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(70deg) rotateZ(360deg);
+  }
+}
+
+@keyframes ringSpin2 {
+  from {
+    transform: translate(-50%, -50%) rotateY(70deg) rotateZ(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateY(70deg) rotateZ(-360deg);
+  }
+}
+
+@keyframes ringSpin3 {
+  from {
+    transform: translate(-50%, -50%) rotateZ(35deg) rotateX(65deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateZ(395deg) rotateX(65deg);
+  }
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 600px) {
+  .app {
+    padding: 3rem 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 2.4rem;
+  }
+
+  .orb {
+    --orb-scale: 0.7;
+  }
+
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-bar input {
+    width: 100%;
+  }
+
+  .search-bar button {
+    width: 100%;
+  }
+
+  .stats {
+    gap: 1.5rem;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .repo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-core,
+  .orb-ring,
+  .empty-state,
+  .profile-card,
+  .language-chart,
+  .repo-list,
+  .language-bar-fill,
+  .skeleton-avatar::after,
+  .skeleton-line::after {
+    animation: none !important;
+  }
+
+  .orb {
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .tilt {
+    transform: none !important;
+  }
 }

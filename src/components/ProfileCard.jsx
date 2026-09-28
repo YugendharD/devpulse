@@ -1,6 +1,8 @@
+import Tilt from "./Tilt";
+
 function ProfileCard({ profile }) {
   return (
-    <div className="profile-card">
+    <Tilt className="profile-card" max={6}>
       <img src={profile.avatar_url} alt={profile.login} className="avatar" />
       <div className="profile-info">
         <h2>{profile.name || profile.login}</h2>
@@ -22,7 +24,7 @@ function ProfileCard({ profile }) {
           </div>
         </div>
       </div>
-    </div>
+    </Tilt>
   );
 }
 

@@ -1,3 +1,5 @@
+import Tilt from "./Tilt";
+
 function RepoList({ repos }) {
   const topRepos = [...repos]
     .sort((a, b) => b.stargazers_count - a.stargazers_count)
@@ -12,11 +14,13 @@ function RepoList({ repos }) {
       <h3>Repositories</h3>
       <div className="repo-grid">
         {topRepos.map((repo) => (
-            <a
+          <Tilt
+            as="a"
+            className="repo-card"
             href={repo.html_url}
             target="_blank"
             rel="noreferrer"
-            className="repo-card"
+            max={6}
             key={repo.id}
           >
             <h4>{repo.name}</h4>
@@ -25,7 +29,7 @@ function RepoList({ repos }) {
               <span>{repo.language || "—"}</span>
               <span>⭐ {repo.stargazers_count}</span>
             </div>
-          </a>
+          </Tilt>
         ))}
       </div>
     </div>
